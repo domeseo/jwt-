@@ -1,34 +1,40 @@
-
 import click
-from api.models import db, User
+from flask.cli import with_appcontext
+from api.models import db, Achievement, Mission
 
-"""
-In this file, you can add as many commands as you want using the @app.cli.command decorator
-Flask commands are usefull to run cronjobs or tasks outside of the API but sill in integration 
-with youy database, for example: Import the price of bitcoin every night as 12am
-"""
-def setup_commands(app):
-    
-    """ 
-    This is an example command "insert-test-users" that you can run from the command line
-    by typing: $ flask insert-test-users 5
-    Note: 5 is the number of users to add
-    """
-    @app.cli.command("insert-test-users") # name of our command
-    @click.argument("count") # argument of out command
-    def insert_test_users(count):
-        print("Creating test users")
-        for x in range(1, int(count) + 1):
-            user = User()
-            user.email = "test_user" + str(x) + "@test.com"
-            user.password = "123456"
-            user.is_active = True
-            db.session.add(user)
+@click.command('populate-achievements')
+@with_appcontext
+def populate_achievements():
+    asociaciones = [
+        {"achievement_title": "First Level", "mission_title": "First Mission"},
+        {"achievement_title": "Perfect Combo", "mission_title": "Combo Mission"},
+        {"achievement_title": "Zen Mode", "mission_title": "Meditate"},
+        {"achievement_title": "Breathe and Recharge", "mission_title": "Breathing"},
+        {"achievement_title": "Knowledge Initiate", "mission_title": "Podcast"},
+        {"achievement_title": "Strength Level", "mission_title": "Workout"},
+        {"achievement_title": "Legendary Day", "mission_title": "Yoga and Meditate"},
+        {"achievement_title": "Supreme Explorer", "mission_title": "Explore"},
+        {"achievement_title": "Unstoppable Mission", "mission_title": "Consistency"},
+        {"achievement_title": "Labyrinth King", "mission_title": "Skill Tree"},
+        {"achievement_title": "Mindfulness Jedi Master", "mission_title": "10 Meditations"},
+        {"achievement_title": "Serenity Winds", "mission_title": "Breath Master"},
+        {"achievement_title": "Virtual Gymnast", "mission_title": "5 Yoga Sessions"},
+        {"achievement_title": "Digital Bibliophile", "mission_title": "Podcast Explorer"},
+        {"achievement_title": "Burst Mode", "mission_title": "Mission Burst"}
+    ]
+
+    linked = 0
+    for pair in asociaciones:
+        achievement = Achievement.query.filter_by(title=pair["achievement_title"]).first()
+        mission = Mission.query.filter_by(title=pair["mission_title"]).first()
+
+        if achievement and mission:
+            mission.achievement_id = achievement.id
             db.session.commit()
-            print("User: ", user.email, " created.")
+            linked += 1
+        elif not mission:
+            click.echo(f"⚠️ Misión '{pair['mission_title']}' no encontrada.")
+        elif not achievement:
+            click.echo(f"⚠️ Logro '{pair['achievement_title']}' no encontrado.")
 
-        print("All test users created")
-
-    @app.cli.command("insert-test-data")
-    def insert_test_data():
-        pass
+    click.echo(f"🔗 {linked} logros correctamente vinculados a misiones.")
